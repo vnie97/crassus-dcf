@@ -11,3 +11,5 @@ Text text text
 print("big code block")
 ```
 More text
+
+:banana:
