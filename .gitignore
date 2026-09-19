@@ -1,4 +1,4 @@
 *.egg-info/
 *.ipynb
 /.vscode
-/crassus_dcf/__pycache__
+/crassus/__pycache__
