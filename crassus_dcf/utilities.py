@@ -2,21 +2,175 @@ from enum import Enum
 from dataclasses import dataclass
 
 class ValueFormat(Enum):
-    SCALED_INTEGER = 0 # float representation of integer scaled in billions, millions, or thousands
-    RATIO = 1 # float value
-    INTEGER = 2 # unscaled integer value
-    PERCENTAGE = 3 # float value with '%' suffix
-    OTHER = 4 # other datatypes (e.g. strings) which will not be formatted
+    SCALED_INT = 0 # float representation of integer scaled in billions, millions, or thousands
+    INT = 1 # unscaled integer value
+    RATIO = 2 # float value
+    PCT = 3 # percentage float value with '%' suffix
+    RAW = 4 # other datatypes (e.g. strings) which will not be formatted
 
 @dataclass
-class FinancialRepKeyFormatting:
-    value_format: ValueFormat = ValueFormat.SCALED_INTEGER
-    indent: int = 0
+class LineItemSpec:
+    value_format: ValueFormat = ValueFormat.SCALED_INT
+    indent_lvl: int = 0
     # TODO: add bool params default_to_NaN, replace_NaN_with_zero, omitted_key, required_key
 
-FINANCIAL_REPS_MASTER_STRUCTURE = {
-    "Year": FinancialRepKeyFormatting(value_format=ValueFormat.OTHER),
-    "Revenue": FinancialRepKeyFormatting(),
-        "Revenue growth": FinancialRepKeyFormatting(value_format=ValueFormat.PERCENTAGE, indent=1),
-    # TODO: add the rest
+FINANCIAL_REPORT_LINE_ITEMS = {
+    "Year": LineItemSpec(value_format=ValueFormat.RAW),
+    "Period": LineItemSpec(value_format=ValueFormat.RAW),
+    "Date": LineItemSpec(value_format=ValueFormat.RAW),
+
+    "INCOME STATEMENT": LineItemSpec(value_format=ValueFormat.RAW),
+    "Revenue": LineItemSpec(),
+        "Revenue growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Cost of goods sold": LineItemSpec(),
+    "Gross profit": LineItemSpec(),
+        "Gross margin": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "Gross profit growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Total operating expenses": LineItemSpec(),
+        "Op. expense increase (decrease)": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "SG&A expenses": LineItemSpec(indent_lvl=1),
+        "R&D expenses": LineItemSpec(indent_lvl=1),
+        "Other expenses": LineItemSpec(indent_lvl=1),
+    "Operating income (EBIT)": LineItemSpec(),
+        "Operating margin": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "EBIT growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "EBIT (reported)": LineItemSpec(indent_lvl=1), # data from API
+        "EBIT discrepancy": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Tax expense": LineItemSpec(),
+        "Effective tax rate": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "NOPAT (EBIAT)": LineItemSpec(),
+    "Other income (expense), net": LineItemSpec(),
+        "Interest expense": LineItemSpec(indent_lvl=1),
+    "Net income": LineItemSpec(),
+        "Net profit margin": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "Net income growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "Net income (reported)": LineItemSpec(indent_lvl=1), # data from API
+        "Net income discrepancy": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "EBITDA": LineItemSpec(),
+        "EBITDA margin": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "EBITDA growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "EBITDA (reported)": LineItemSpec(indent_lvl=1), # data from API
+        "EBITDA discrepancy": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Shares outstanding, diluted": LineItemSpec(),
+        "Shares outstanding increase (decrease)": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "Shares outstanding, basic": LineItemSpec(indent_lvl=1),
+        "Shares outstanding discrepancy": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Diluted EPS": LineItemSpec(value_format=ValueFormat.RATIO),
+        "Diluted EPS growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "Diluted EPS (reported)": LineItemSpec(value_format=ValueFormat.RATIO, indent_lvl=1),
+        "Diluted EPS discrepancy": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Net income pct. of EBIT": LineItemSpec(value_format=ValueFormat.PCT),
+
+    "BALANCE SHEET": LineItemSpec(value_format=ValueFormat.RAW),
+    "Total assets": LineItemSpec(),
+        "Current assets": LineItemSpec(indent_lvl=1),
+            "Cash & cash equivalents": LineItemSpec(indent_lvl=2),
+            "Short-term investments": LineItemSpec(indent_lvl=2),
+            "Total cash & short-term investments": LineItemSpec(indent_lvl=2),
+            "Accounts receivables": LineItemSpec(indent_lvl=2),
+            "Inventory": LineItemSpec(indent_lvl=2),
+        "Non-current assets": LineItemSpec(indent_lvl=1),
+            "Plant, property & equipment (net)": LineItemSpec(indent_lvl=2),
+            "Goodwill": LineItemSpec(indent_lvl=2),
+            "Intangible assets": LineItemSpec(indent_lvl=2),
+        "Total assets excl. goodwill": LineItemSpec(indent_lvl=1),
+    "Total liabilities": LineItemSpec(),
+        "Current liabilities": LineItemSpec(indent_lvl=1),
+            "Current portion of long-term debt": LineItemSpec(indent_lvl=2),
+            "Short-term capital lease obligations": LineItemSpec(indent_lvl=2),
+            "Total short-term debt": LineItemSpec(indent_lvl=2),
+            "Accounts payables": LineItemSpec(indent_lvl=2),
+        "Non-current liabilities": LineItemSpec(indent_lvl=1),
+            "Long-term debt": LineItemSpec(indent_lvl=2),
+            "Long-term capital lease obligations": LineItemSpec(indent_lvl=2),
+        # TODO: Add "Other long-term liabilities"
+        "Total long-term interest-bearing debt": LineItemSpec(indent_lvl=1),
+    "Retained earnings": LineItemSpec(),
+    "Book value of equity": LineItemSpec(),
+        "Goodwill pct. of equity (book value)": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Shareholder's equity (excl. goodwill)": LineItemSpec(),
+        "Minority interest": LineItemSpec(indent_lvl=1),
+        "Preferred stock": LineItemSpec(indent_lvl=1),
+    "Working capital, accounting definition": LineItemSpec(),
+    "Working capital excl. cash and & debt": LineItemSpec(),
+        "Non-cash current assets": LineItemSpec(indent_lvl=1),
+        "Non-debt current liabilities": LineItemSpec(indent_lvl=1),
+    "Invested capital": LineItemSpec(),
+        "Invested capital (adjusted)": LineItemSpec(indent_lvl=1),
+        "Invested capital excl. goodwill": LineItemSpec(indent_lvl=1),
+    "Capital employed": LineItemSpec(),
+        "Capital employed excl. goodwill": LineItemSpec(indent_lvl=1),
+    
+    "CASH FLOW STATEMENT": LineItemSpec(value_format=ValueFormat.RAW),
+    "Cash flow from operating activities": LineItemSpec(),
+        "Depreciation & amortization": LineItemSpec(indent_lvl=1),
+            "D&A pct. of NOPAT": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+            "D&A increase (decrease)": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+        "Change in net op. assets & liabilities": LineItemSpec(indent_lvl=1),
+        "Deferred income tax": LineItemSpec(indent_lvl=1),
+        "Change in NWC": LineItemSpec(indent_lvl=1),
+            "Change in NWC pct. of NOPAT": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+            "Change in non-cash WC": LineItemSpec(indent_lvl=2),
+            "Change in accounting NWC": LineItemSpec(indent_lvl=2),
+            "Change in non-cash non-debt NWC": LineItemSpec(indent_lvl=2),
+    "Cash flow from investing activities": LineItemSpec(),
+        "Capital expenditures": LineItemSpec(indent_lvl=1),
+            "CapEx pct. of NOPAT": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+            "CapEx increase (decrease)": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+        "Acquisitions": LineItemSpec(indent_lvl=1),
+            "Acquisitions pct. of NOPAT": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+        "Net CapEx": LineItemSpec(indent_lvl=1),
+            "Net CapEx pct. of NOPAT":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+        "Total reinvestment": LineItemSpec(indent_lvl=1),
+            "Reinvestment rate":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+            "Reinvestment rate incl. acquisitions":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+    "Cash flow from financing activities": LineItemSpec(),
+        "Dividends paid": LineItemSpec(indent_lvl=1),
+            "Retention ratio": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+        "Net issuance of debt": LineItemSpec(indent_lvl=1),
+        "Net issuance of shares": LineItemSpec(indent_lvl=1),
+        "Total dividends and share buybacks":  LineItemSpec(indent_lvl=1),
+            "Total retention ratio":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=2),
+    "Free cash flow to equity (FCFE)": LineItemSpec(),
+        "FCFE pct. of revenue":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "Total dividends pct. of FCFE":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Free cash flow to firm (FCFF)":  LineItemSpec(),
+        "FCFF pct. of revenue":  LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+        "FCFF growth": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "FCFF incl. acquisitions": LineItemSpec(),
+        "FCFF incl. acquisitions pct. of revenue": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    
+    "KEY STATISTICS": LineItemSpec(value_format=ValueFormat.RAW),
+    # - Profitability ratios:
+    "Return on equity (ROE)": LineItemSpec(value_format=ValueFormat.PCT),
+        "ROE excl. goodwill": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Return on assets (ROA)": LineItemSpec(value_format=ValueFormat.PCT),
+        "ROA excl. goodwill": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Return on invested capital (ROIC)": LineItemSpec(value_format=ValueFormat.PCT),
+        "ROIC (adjusted)": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1), # includes effects of capitalizing intangibles
+        "ROIC excl. goodwill": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    "Return on capital employed (ROCE)": LineItemSpec(value_format=ValueFormat.PCT),
+        "ROCE excl. goodwill": LineItemSpec(value_format=ValueFormat.PCT, indent_lvl=1),
+    
+    # - Efficiency ratios:
+    "Invested capital turnover ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+        "Invested capital turnover ratio, excl. goodwill": LineItemSpec(value_format=ValueFormat.RATIO, indent_lvl=1),
+    "Change in sales to reinvestment": LineItemSpec(value_format=ValueFormat.RATIO),
+    "Asset turnover ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+        "Asset turnover ratio, excl. goodwill": LineItemSpec(value_format=ValueFormat.RATIO, indent_lvl=1),
+    "Receivables turnover ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+    "Inventory turnover ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+    
+    # - Financial leverage:
+    "Debt to equity ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+        "Debt to equity ratio, excl. goodwill": LineItemSpec(value_format=ValueFormat.RATIO, indent_lvl=1),
+    "Total debt ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+        "Total debt ratio, excl. goodwill": LineItemSpec(value_format=ValueFormat.RATIO, indent_lvl=1),
+    "Gross debt to EBITDA ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+    "Net debt to EBITDA ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+
+    # - Liquidity ratios:
+    "Interest coverage ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+    "Current ratio": LineItemSpec(value_format=ValueFormat.RATIO),
+    "Quick ratio": LineItemSpec(value_format=ValueFormat.RATIO),
 }
